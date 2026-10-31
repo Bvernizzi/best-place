@@ -1,0 +1,24 @@
+services:                                # containers
+  postgres:                              # service name
+    image: postgis/postgis:17-3.5-alpine # Postgres 17, PostGIS 3.5
+    container_name: best_place-postgres
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "127.0.0.1:5432:5432"            # container
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data  
+
+    healthcheck:                         # DB test
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]      
+      interval: 5s                       # interval
+      timeout: 3s                        # max
+      retries: 10                        
+
+volumes:                                 
+  pgdata:
