@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "best-place"
+version = "0.1.0"
+description = "Data pipeline that integrates Brazilian public data to compare the best cities to live in"      
+requires-python = ">=3.11"
+dependencies = [
+    "httpx",
+    "tenacity",
+    "psycopg[binary]"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "respx",
+    "ruff"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
