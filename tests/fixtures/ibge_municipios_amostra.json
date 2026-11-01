@@ -1,0 +1,12 @@
+[
+  {
+    "id": 3509502,
+    "nome": "Campinas",
+    "microrregiao": {"id": 35032, "nome": "Campinas"}
+  },
+  {
+    "id": 5101837,
+    "nome": "Boa Esperança do Norte",
+    "microrregiao": null
+  }
+]

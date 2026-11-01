@@ -1,3 +1,5 @@
+# Baixa uma URL e tenta de novo em falhas temporárias
+
 import httpx
 from tenacity import (
     retry,
@@ -14,7 +16,6 @@ def _deve_tentar_de_novo(erro: BaseException) -> bool:
         status = erro.response.status_code
         return status == 429 or 500 <= status <= 599
     return False
-
 
 @retry(
     retry=retry_if_exception(_deve_tentar_de_novo),
