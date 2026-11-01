@@ -1,8 +1,0 @@
-httpx
-tenacity
-psycopg[binary]
-
-[dev]
-pytest
-respx
-ruff
