@@ -17,6 +17,7 @@ def _deve_tentar_de_novo(erro: BaseException) -> bool:
         return status == 429 or 500 <= status <= 599
     return False
 
+
 @retry(
     retry=retry_if_exception(_deve_tentar_de_novo),
     stop=stop_after_attempt(4),

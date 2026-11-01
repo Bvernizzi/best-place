@@ -10,7 +10,8 @@ requires-python = ">=3.11"
 dependencies = [
     "httpx",
     "tenacity",
-    "psycopg[binary]"
+    "psycopg[binary]",
+    "python-dotenv",
 ]
 
 [project.optional-dependencies]
