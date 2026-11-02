@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from comparador.ingestion.br.ibge_municipios import calcular_hash, ler_municipios
+from comparador.core.carga import calcular_hash
+from comparador.ingestion.br.ibge_municipios import ler_municipios
 
 AMOSTRA = Path(__file__).parents[1] / "fixtures" / "ibge_municipios_amostra.json"
 
