@@ -1,8 +1,12 @@
 import argparse
 
-from comparador.ingestion.br import ibge_municipios
+from comparador.ingestion.br import ibge_municipios, ibge_populacao
 
-FONTES = {"br.ibge_municipios": ibge_municipios.executar}
+FONTES = {
+    "br.ibge_municipios": ibge_municipios.executar,
+    "br.ibge_populacao_censo": ibge_populacao.executar_censo,
+    "br.ibge_populacao_estimativa": ibge_populacao.executar_estimativa,
+}
 
 
 def main() -> None:

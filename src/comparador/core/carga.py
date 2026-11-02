@@ -12,6 +12,7 @@ def calcular_hash(conteudo: bytes) -> str:
     """Return the SHA-256 of the content, used to detect changes between loads."""
     return hashlib.sha256(conteudo).hexdigest()
 
+
 def executar_carga(
     source: str,
     url: str,
