@@ -31,3 +31,15 @@ models:
           - accepted_values:
               arguments:
                 values: ["censo", "estimativa"]
+
+  - name: ips_indicadores
+    columns:
+      - name: municipio_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('municipios')
+                field: municipio_id
+      - name: indicador
+        data_tests: [not_null]

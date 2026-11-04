@@ -7,3 +7,4 @@ sources:
       - name: ingestion_runs
       - name: ibge_municipios
       - name: ibge_populacao
+      - name: ips_brasil
