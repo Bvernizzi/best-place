@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: bronze
+    tables:
+      - name: ingestion_runs
+      - name: ibge_municipios
+      - name: ibge_populacao

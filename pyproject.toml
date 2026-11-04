@@ -18,7 +18,9 @@ dependencies = [
 dev = [
     "pytest",
     "respx",
-    "ruff"
+    "ruff",
+    "dbt-core>=1.12,<1.13",
+    "dbt-postgres"
 ]
 
 [tool.setuptools.packages.find]

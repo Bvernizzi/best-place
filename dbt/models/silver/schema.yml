@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: municipios
+    columns:
+      - name: municipio_id
+        data_tests: [not_null, unique]
+      - name: nome
+        data_tests: [not_null]
+      - name: uf
+        data_tests: [not_null]
+      - name: regiao
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Norte", "Nordeste", "Sudeste", "Sul", "Centro-Oeste"]
+
+  - name: populacao
+    columns:
+      - name: municipio_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('municipios')
+                field: municipio_id
+      - name: populacao
+        data_tests: [not_null]
+      - name: tipo
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["censo", "estimativa"]
