@@ -1,11 +1,12 @@
 import argparse
 
-from comparador.ingestion.br import ibge_municipios, ibge_populacao
+from comparador.ingestion.br import ibge_municipios, ibge_populacao, ips_brasil
 
 FONTES = {
     "br.ibge_municipios": ibge_municipios.executar,
     "br.ibge_populacao_censo": ibge_populacao.executar_censo,
     "br.ibge_populacao_estimativa": ibge_populacao.executar_estimativa,
+    "br.ips_brasil": ips_brasil.executar,
 }
 
 
