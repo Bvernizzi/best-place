@@ -1,83 +1,90 @@
 # Best Place
 
-Pipeline de dados que reúne fontes públicas sobre os municípios brasileiros
-para gerar um ranking de qualidade de vida conforme as prioridades de cada pessoa.
+A data pipeline that brings together public data on Brazilian municipalities
+to build a quality-of-life ranking based on each person's priorities.
 
-> **Projeto em desenvolvimento.** A carga da lista de municípios já funciona.
-> Indicadores, ranking e app ainda não foram construídos.
+> **Work in progress.** Ingestion and the cleaned (silver) layer are working
+> for three sources. The ranking and the app are not built yet.
 
-## Objetivo
+## Goal
 
-Comparar cidades é difícil porque a informação está espalhada e o que importa
-muda de pessoa para pessoa. Neste projeto, o usuário definirá o peso de cada
-critério, como segurança, saúde, parques, praia e aeroporto, e receberá um
-ranking personalizado.
+Comparing cities is hard: the information is scattered, and what matters
+differs from person to person. In this project, users will set a weight for
+each criterion, such as safety, health, parks, beaches and airports, and get
+a personalized ranking.
 
-Regras do projeto:
+Project rules:
 
-- Custo zero, com fontes públicas e gratuitas.
-- Código IBGE de 7 dígitos como chave comum entre as fontes.
-- Carga de todos os municípios; o filtro por população é escolha do usuário.
-- Cada indicador guarda fonte, ano de referência e data de carga.
-- Arquitetura preparada para outros países, sem misturá-los em um ranking único.
+- Zero cost, using only free public data.
+- The 7-digit IBGE municipality code is the common key across sources.
+- All municipalities are loaded; filtering by population is the user's choice.
+- Every indicator keeps its source, reference year and load date.
+- Built to support other countries later, without mixing them in one ranking.
 
-## Arquitetura
+## Architecture
 
 ```text
-Fontes públicas -> Python -> bronze -> silver -> gold -> app
+Public sources -> Python -> bronze -> silver -> gold -> app
 ```
 
-| Camada | Função | Situação |
+| Layer | Role | Status |
 |---|---|---|
-| Ingestão | Baixa os dados com retry e evita cargas repetidas | Em andamento |
-| Bronze | Guarda os dados como vieram da fonte, em JSONB | Em andamento |
-| Silver | Limpa e padroniza os dados com dbt | Planejada |
-| Gold | Reúne os indicadores por município | Planejada |
-| App | Streamlit com sliders de peso e mapa | Planejada |
+| Ingestion | Downloads data with retries and skips unchanged files | Working |
+| Bronze | Stores data exactly as received, in JSONB | Working |
+| Silver | Cleans and types the data with dbt, with tests | Working |
+| Gold | Combines indicators per municipality | Planned |
+| App | Streamlit with weight sliders and a map | Planned |
 
-### Principais decisões
+### Key decisions
 
-- **Postgres com PostGIS:** gratuito, roda localmente e faz as consultas
-  geográficas necessárias para aeroportos, parques e praias.
-- **Bronze em JSONB:** preserva o dado original e permite reprocessar as
-  próximas camadas sem baixar tudo de novo.
-- **Hash do conteúdo:** se a fonte não mudou, a execução é registrada como
-  `skipped` e nada é duplicado.
-- **dbt na transformação:** mantém os modelos em SQL, com testes e documentação.
-- **Sem Airflow no MVP:** com poucas fontes, um orquestrador traria mais
-  complexidade do que benefício. A execução será por Makefile ou GitHub Actions.
+- **Postgres with PostGIS:** free, runs locally, and handles the spatial
+  queries needed for airports, parks and beaches.
+- **Raw JSONB in bronze:** keeps the original data, so later layers can be
+  rebuilt without downloading again.
+- **Content hashing:** if a source has not changed, the run is recorded as
+  `skipped` and nothing is duplicated.
+- **Atomic loads:** a failed load is rolled back, but the run is still
+  recorded as `failed`, so there is a history without partial data.
+- **dbt for transformations:** models in version-controlled SQL, with data
+  tests on keys, relationships and accepted values.
+- **Long format for indicators:** one row per municipality and indicator, so
+  a new indicator is a new row, not a schema change.
+- **No Airflow in the MVP:** with few sources, an orchestrator would add more
+  complexity than value. Runs will use a Makefile or GitHub Actions.
 
 ## Status
 
-| Fonte | Dado | Situação |
+| Source | Data | Status |
 |---|---|---|
-| IBGE Localidades | Lista de municípios | Concluída |
-| IBGE SIDRA | População | Próxima |
-| Atlas Brasil e IPS Brasil | IDHM e progresso social | Planejada |
-| ANAC | Aeroportos | Planejada |
-| OpenStreetMap | Parques e praias | Planejada |
-| CNES/DataSUS | Saúde | Planejada |
-| Segurança | A definir | Planejada |
+| IBGE Localidades | Municipality list | Done |
+| IBGE SIDRA | Population (2022 Census and 2026 estimate) | Done |
+| IPS Brasil 2026 | Social Progress Index, 76 indicators | Done |
+| ANAC | Airports | Planned |
+| OpenStreetMap | Parks and beaches | Planned |
+| CNES/DataSUS | Health | Planned |
 
-## Como rodar
+The municipal HDI (Atlas Brasil) is only available up to 2010, so it is
+not used for now.
 
-**Requisitos:** Git, Python 3.11+ e Docker Desktop. Os comandos abaixo são para
-PowerShell, no Windows.
+## How to run
 
-1. Clone o repositório:
+**Requirements:** Git, Python 3.11+ and Docker Desktop. The commands below
+are for PowerShell on Windows.
+
+1. Clone the repository:
 
 ```powershell
 git clone https://github.com/Bvernizzi/best-place.git
 cd best-place
 ```
 
-2. Crie o `.env` e troque a senha de exemplo:
+2. Create `.env` and change the example password:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-3. Instale o projeto:
+3. Install the project:
 
 ```powershell
 python -m venv .venv
@@ -85,47 +92,76 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 ```
 
-4. Suba o banco e aguarde o estado `healthy`:
+4. Start the database and wait until it is `healthy`:
 
 ```powershell
 docker compose up -d
 docker compose ps
 ```
 
-5. Crie as tabelas:
+5. Create the bronze tables:
 
 ```powershell
-Get-Content sql\bronze\001_core.sql | docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+Get-ChildItem sql\bronze\*.sql | Sort-Object Name | ForEach-Object { Get-Content $_.FullName | docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1' }
 ```
 
-6. Faça a primeira carga:
+6. Load the sources:
 
 ```powershell
 python -m comparador ingest br.ibge_municipios
+python -m comparador ingest br.ibge_populacao_censo
+python -m comparador ingest br.ibge_populacao_estimativa
+python -m comparador ingest br.ips_brasil
 ```
 
-7. Rode os testes:
+7. Build and test the silver layer with dbt:
+
+```powershell
+Get-Content .env | ForEach-Object { $k, $v = $_ -split '=', 2; Set-Item "env:$k" $v }
+dbt build --project-dir dbt --profiles-dir dbt
+```
+
+8. Run the Python tests:
 
 ```powershell
 pytest
 ```
 
-## Limitações dos dados
+## Data limitations
 
-- **Datas diferentes:** cada fonte tem seu próprio ano de referência, então os
-  indicadores não descrevem o mesmo momento.
-- **Cidades pequenas:** poucas ocorrências podem gerar taxas muito instáveis.
-- **Municípios novos:** Boa Esperança do Norte (MT) foi instalado em 2025, não tem microrregião na API do IBGE e não aparece na tabela do Censo 2022.  tem microrregião na API do IBGE. A cobertura em bases mais antigas precisa ser verificada.
-- **Segurança:** dados recentes podem ser revisados, e o atraso no envio por um
-  estado pode distorcer comparações.
-- **Qualidade de vida:** o ranking reflete os indicadores e pesos escolhidos, não
-  uma medida completa da experiência de morar em uma cidade.
+- **Different reference years:** each source has its own reference year, so
+  the indicators do not describe the same moment.
+- **Small towns:** a handful of events can produce very unstable rates.
+- **New municipalities:** Boa Esperança do Norte (MT) was established in
+  2025. It has no microregion in the IBGE API and does not appear in the
+  2022 Census or in IPS Brasil 2026.
+- **IPS has no IBGE codes:** rows are matched by normalized name and state.
+  5,565 match automatically, and 5 spelling differences are mapped by hand in
+  a dbt seed. A dbt test fails if any row is left unmatched.
+- **IPS editions are not comparable:** IPS Brasil states that its 2024, 2025
+  and 2026 editions use different methods, so they cannot form a time series.
+- **Quality of life:** the ranking reflects the chosen indicators and
+  weights, not the full experience of living in a city.
 
-## Fontes
+## Sources
 
-| Fonte | URL | Licença | Verificação |
+| Source | URL | License | Checked |
 |---|---|---|---|
-| IBGE Localidades | [API de municípios](https://servicodados.ibge.gov.br/api/v1/localidades/municipios) | Não confirmada para a API; citar o IBGE como fonte | 31/10/2026 |
+| IBGE Localidades | [Municipalities API](https://servicodados.ibge.gov.br/api/v1/localidades/municipios) | Not stated for the API; IBGE credited as the source | 2026-10-31 |
+| IBGE SIDRA | [Table 4714](https://apisidra.ibge.gov.br/values/t/4714/n6/all/v/93/p/2022) and [table 6579](https://apisidra.ibge.gov.br/values/t/6579/n6/all/v/9324/p/2026) | Not stated for the API; IBGE credited as the source | 2026-11-02 |
+| IPS Brasil 2026 | [Data page](https://ipsbrasil.org.br/explore/data) | No open license; the site states "all rights reserved" | 2026-11-04 |
 
-As demais fontes entram nesta tabela depois de terem URL, formato e licença
-confirmados. Este repositório não redistribui dados brutos.
+This repository does not redistribute raw data: the pipeline downloads it
+from the official sources on each run.
+
+## Glossary
+
+Code and table names use Brazilian Portuguese terms from the domain.
+
+| Term | Meaning |
+|---|---|
+| `municipio` | Municipality |
+| `populacao` | Population |
+| `censo` / `estimativa` | Census / estimate |
+| `carga` | Data load |
+| `edicao` | Edition (of a yearly index) |
