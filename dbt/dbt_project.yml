@@ -8,3 +8,13 @@ models:
   best_place:
     silver:
       +materialized: table
+    gold:
+      +materialized: table
+      +schema: gold
+
+seeds:
+  best_place:
+    criterios:
+      +schema: gold
+    indicadores_catalogo:
+      +schema: gold
