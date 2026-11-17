@@ -4,7 +4,8 @@ A data pipeline that brings together public data on Brazilian municipalities
 to build a quality-of-life ranking based on each person's priorities.
 
 > **Work in progress.** Ingestion and the cleaned (silver) layer are working
-> for three sources. The ranking and the app are not built yet.
+> for three sources. The ranking criteria are defined; the gold layer, the
+> ranking and the app are not built yet.
 
 ## Goal
 
@@ -32,7 +33,7 @@ Public sources -> Python -> bronze -> silver -> gold -> app
 | Ingestion | Downloads data with retries and skips unchanged files | Working |
 | Bronze | Stores data exactly as received, in JSONB | Working |
 | Silver | Cleans and types the data with dbt, with tests | Working |
-| Gold | Combines indicators per municipality | Planned |
+| Gold | Normalized indicators per municipality, ranking criteria | In progress |
 | App | Streamlit with weight sliders and a map | Planned |
 
 ### Key decisions
@@ -49,8 +50,45 @@ Public sources -> Python -> bronze -> silver -> gold -> app
   tests on keys, relationships and accepted values.
 - **Long format for indicators:** one row per municipality and indicator, so
   a new indicator is a new row, not a schema change.
+- **One schema per layer:** `bronze`, `silver` and `gold` are separate
+  Postgres schemas, so permissions can be granted per layer (the app only
+  needs to read `gold`). A dbt macro keeps the exact schema names instead of
+  dbt's default `silver_gold`.
+- **Criteria as configuration:** ranking criteria, default weights and the
+  mapping from source indicators to criteria live in dbt seeds. Adding a
+  source or a country means adding rows, not changing SQL.
 - **No Airflow in the MVP:** with few sources, an orchestrator would add more
   complexity than value. Runs will use a Makefile or GitHub Actions.
+
+## Ranking criteria
+
+The first version uses the 12 components of IPS Brasil 2026, grouped into 7
+criteria. Components are already on a 0-100 scale where higher is better.
+Users can change every weight; these are only the defaults.
+
+| Criterion | IPS components | Default weight |
+|---|---|---|
+| Safety | Personal Safety | 25 |
+| Health | Nutrition and Basic Medical Care; Health and Wellness | 20 |
+| Education | Access to Basic Knowledge; Access to Advanced Education | 15 |
+| Infrastructure | Water and Sanitation; Shelter | 15 |
+| Environment | Environmental Quality | 10 |
+| Connectivity | Access to Information and Communications | 10 |
+| Inclusion and rights | Personal Rights; Personal Freedom and Choice; Inclusiveness | 5 |
+
+Planned rules for the gold layer and the ranking:
+
+- **Min-max normalization within each country**, over all municipalities,
+  before any population filter. Scores do not depend on which other cities
+  the user selected, and countries are never compared directly.
+- **The overall IPS becomes a data test.** It is the simple mean of the 12
+  components (checked: maximum difference of 0.007 across 5,570
+  municipalities), so it cannot validate the ranking. Instead, a test checks
+  that this mean still matches, which catches errors in ingestion or name
+  matching.
+- **Missing data excludes, not redistributes:** a municipality without data
+  for a weighted criterion is left out of the ranking, so missing data never
+  improves a position.
 
 ## Status
 
@@ -114,7 +152,7 @@ python -m comparador ingest br.ibge_populacao_estimativa
 python -m comparador ingest br.ips_brasil
 ```
 
-7. Build and test the silver layer with dbt:
+7. Load the seeds and build and test the dbt models:
 
 ```powershell
 Get-Content .env | ForEach-Object { $k, $v = $_ -split '=', 2; Set-Item "env:$k" $v }
@@ -165,3 +203,7 @@ Code and table names use Brazilian Portuguese terms from the domain.
 | `censo` / `estimativa` | Census / estimate |
 | `carga` | Data load |
 | `edicao` | Edition (of a yearly index) |
+| `criterio` | Ranking criterion |
+| `peso_padrao` | Default weight |
+| `indicador` | Indicator |
+| `direcao` | Direction (`maior_melhor`: higher is better) |
