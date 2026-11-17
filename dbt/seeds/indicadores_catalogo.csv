@@ -1,0 +1,13 @@
+country_code,indicador,nome_fonte,criterio,fonte,direcao
+BR,ips_seguranca_pessoal,Segurança Pessoal,seguranca,IPS Brasil,maior_melhor
+BR,ips_nutricao_cuidados_medicos,Nutrição e Cuidados Médicos Básicos,saude,IPS Brasil,maior_melhor
+BR,ips_saude_bem_estar,Saúde e Bem-estar,saude,IPS Brasil,maior_melhor
+BR,ips_conhecimento_basico,Acesso ao Conhecimento Básico,educacao,IPS Brasil,maior_melhor
+BR,ips_educacao_superior,Acesso à Educação Superior,educacao,IPS Brasil,maior_melhor
+BR,ips_agua_saneamento,Água e Saneamento,infraestrutura,IPS Brasil,maior_melhor
+BR,ips_moradia,Moradia,infraestrutura,IPS Brasil,maior_melhor
+BR,ips_meio_ambiente,Qualidade do Meio Ambiente,meio_ambiente,IPS Brasil,maior_melhor
+BR,ips_informacao_comunicacao,Acesso à Informação e Comunicação,conectividade,IPS Brasil,maior_melhor
+BR,ips_direitos_individuais,Direitos Individuais,inclusao_direitos,IPS Brasil,maior_melhor
+BR,ips_liberdades_escolha,Liberdades Individuais e de Escolha,inclusao_direitos,IPS Brasil,maior_melhor
+BR,ips_inclusao_social,Inclusão Social,inclusao_direitos,IPS Brasil,maior_melhor

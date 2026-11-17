@@ -1,0 +1,8 @@
+country_code,criterio,rotulo,peso_padrao
+BR,seguranca,Segurança,25
+BR,saude,Saúde,20
+BR,educacao,Educação,15
+BR,infraestrutura,Infraestrutura,15
+BR,meio_ambiente,Meio ambiente,10
+BR,conectividade,Conectividade,10
+BR,inclusao_direitos,Inclusão e direitos,5
