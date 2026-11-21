@@ -8,6 +8,7 @@ with ultima_carga as (
 ips as (
     select
         p.edicao,
+        p.loaded_at,
         p.payload,
         p.payload ->> 'Município' as nome,
         p.payload ->> 'UF' as uf
@@ -26,6 +27,7 @@ municipios as (
 ligados as (
     select
         i.edicao,
+        i.loaded_at,
         i.payload,
         coalesce(c.municipio_id, m.municipio_id) as municipio_id
     from ips as i
@@ -39,6 +41,7 @@ ligados as (
 select
     l.municipio_id,
     l.edicao,
+    l.loaded_at,
     e.indicador,
     nullif(e.valor, '')::numeric as valor
 from ligados as l
